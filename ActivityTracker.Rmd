@@ -1,0 +1,28 @@
+---
+title: "Activity Tracker Machine Learning"
+author: "Kesavan Kushalnagar"
+date: "November 13, 2017"
+output: html_document
+---
+
+
+## Introduction
+
+There has been an influx of devices that are able to measure a person's activity. However they focus more on how much activity is being done rather than how well they do it. This project's goal is to use machine learning to predict the manner that a given user is doing an exercise (good or bad). The data is taken from http://groupware.les.inf.puc-rio.br/har , a project where they got a significant amount of data related to fitness wearables.
+
+
+### Read in the data
+```{r readin}
+training <- read.csv("pml-training.csv")
+testing <- read.csv("pml-testing.csv")
+```
+
+## Machine Learning
+
+I will perform a variety of measures and test how good each one is individually. If it seems appropriate, I will then do an ensemble method with all of the good models and use them to create a more accurate one.
+
+
+```{r ml}
+
+```
+
