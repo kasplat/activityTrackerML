@@ -12,17 +12,63 @@ There has been an influx of devices that are able to measure a person's activity
 
 
 ### Read in the data
+The data is read in using read.csv. In the original codebook, it is indicated that many of the variables are quite sparse and filled with NA values. Therefore I opted to remove them from the model, as they do not contribute highly to the performance of the model.
+
+The 2 data sets are available through the course website.
 ```{r readin}
-training <- read.csv("pml-training.csv")
-testing <- read.csv("pml-testing.csv")
+training <- read.csv("pml-training.csv", na.strings=c("NA","#DIV/0!",""))
+testing <- read.csv("pml-testing.csv", na.strings=c("NA","#DIV/0!",""))
+library(dplyr)
+library(caret)
+set.seed(1334)
+inTrain <- createDataPartition(training$classe, p=.6, list = FALSE)
+subTrain <- training[inTrain,]
+subTest <- training[-inTrain,]
+```
+
+### Cleaning 
+First, we remove all columns with near zero variance. Then columns with a lot of NAs are removed.
+
+```{r cleaning}
+#Remove columns with near zero variance
+nearZero <- nearZeroVar(subTrain,saveMetrics =TRUE)
+nearZeroVars <- row.names(nearZero[which(nearZero$nzv=='TRUE'),])
+remove <- names(subTrain) %in% nearZeroVars
+subTrain <- subTrain[!remove]
+
+remove2<-colSums(is.na(subTrain)) > 5000
+subTrain<-subTrain[!remove2]
+
+```
+
+```{r}
+remove3<-c("X","user_name", "raw_timestamp_part_1", "raw_timestamp_part_2", "cvtd_timestamp","num_window")
+remove3<-names(subTrain) %in% remove3
+subTrain<-subTrain[!remove3]
+
+colName<-colnames(subTrain)
+colName2<-colnames(subTrain[,-53])
+subTest<-subTest[,colName]
+testing<-testing[,colName2]
 ```
 
 ## Machine Learning
 
-I will perform a variety of measures and test how good each one is individually. If it seems appropriate, I will then do an ensemble method with all of the good models and use them to create a more accurate one.
+I will perform a variety of measures and test how good each one is individually. If it seems appropriate, I will then do an ensemble method with all of the good models and use them to create a more accurate one. The models tested were: Random forest.
 
 
-```{r ml}
+```{r rf, cache= TRUE, results='hide'}
+library(randomForest, cache = TRUE)
+#Create the models using caret
+modelFit<-randomForest(classe~.,data=subTrain)
+```
+Cross validation is done on the prediction using the confusion matrix. This shows us an accuracy of approiximately 99%, which should reflect the out of sample error.
 
+
+```{r}
+#Create the predictions and calculate their corresponding confusion matrices.
+prediction<-predict(modelFit,subTest,type="class")
+confusionMatrix(prediction,subTest$classe)
 ```
 
+The accuracy on the training set is shown here. This should be similar to the out of sample error because the testing set is indepedent from the training set. Because all methods use cross-validation in their training, we expect the out of sample error to be lower.
